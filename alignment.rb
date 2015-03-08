@@ -21,6 +21,45 @@
     # require 'nmatrix' # using SciRuby NMatrix (gem install nmatrix)
     require 'matrix' # normal ruby Matrix class
 
+    def pretty_matrix(dna1, dna2, mat) # seq1, seq2, scored_matrix
+      # This function gives out the scoring matrix in a format 
+      # well readable in the console
+
+        puts 'The score matrix:'
+        dna2.each_char {|d| print '    ' + d + ''}
+        puts
+
+          i = 0
+          r = 0
+          print dna1[r]
+        mat.each do |number|
+          if number >= 0          # za znaminko
+            print ' '
+          end
+          if number >= 0 and number < 10    # za nulu
+            print '  '
+          end
+          if number >= 10 and number < 100  # za nulu
+            print ' '
+          end
+          if number > -10 and number < 0
+            print '  '
+          end
+          if number > -100 and number <= -10
+            print ' '
+          end
+          print number.to_s + " "
+          i+= 1
+          if i == mat.column_size
+            print "\n"
+            r += 1
+            print dna1[r]
+            i = 0
+          end
+        end
+      return
+    end
+
 # User input (alignment params)
     puts "Input the MATCH scoring coefficient>"; STDOUT.flush
         match_coeff = gets.chomp.to_i
@@ -55,8 +94,10 @@
         end
     end
     
-# Needleman-Wunsch algorithm
-  # 1) Take the sequences, add gap to the beginning (- is gap)
+# Score the matrix
+  # 1) Take the sequences, reverse them, add gap to the beginning (- is gap)
+    dna1 = dna1.reverse
+    dna2 = dna2.reverse
     dna1.insert(0, '-')
     dna2.insert(0, '-')
   # 2) Construct the empty matrix (using Matrix class)
@@ -101,49 +142,25 @@
       end
     end
 
-  # f) THIS WHOLE SHIT ONLY SHOWS PRETTY MATRIX ------------------
-    puts 'The score matrix:'
-    # puts mat.to_a.map(&:inspect) # shows the score matrix
-    dna2.each_char {|d| print '    ' + d + ''}
-    puts
-
-      i = 0
-      r = 0
-      print dna1[r]
-    mat.each do |number|
-      if number >= 0          # za znaminko
-        print ' '
-      end
-      if number >= 0 and number < 10    # za nulu
-        print '  '
-      end
-      if number >= 10 and number < 100  # za nulu
-        print ' '
-      end
-      if number > -10 and number < 0
-        print '  '
-      end
-      if number > -100 and number <= -10
-        print ' '
-      end
-      print number.to_s + " "
-      i+= 1
-      if i == mat.column_size
-        print "\n"
-        r += 1
-        print dna1[r]
-        i = 0
-      end
-    end
+  # f) show matrix
+puts pretty_matrix(dna1,dna2,mat)
   # ----------------------------------------------------------------  
-# 5) find the optimal path
+
+# Needleman-Wunsh (global) or Smith-Waterman (local?)
+
+
+## TODO code for choosing
+
+
+# NEEDLEMAN-WUNSH --- GLOBAL ALIGNMENT
+# G) find the optimal path
 # a) init + start in the lower right corner
-    path = []
-    aligned1 = []
-    aligned2 = []
+    g_path = []
+    g_aligned1 = []
+    g_aligned2 = []
     row = dna1.length-1 # starting row
     col = dna2.length-1 # starting column
-    path << mat.[](row,col)
+    g_path << mat.[](row,col)
 
 # b) iterate over the path until top-left
     while row>0 or col>0
@@ -153,46 +170,139 @@
 
         if row == 0             # can go only to the left
           # puts 'goin left!!'
-          path << lv
-          aligned1 << dna2.[](col)
-          aligned2 << '-' #dna1.[](row)
+          g_path << lv
+          g_aligned1 << dna2.[](col)
+          g_aligned2 << '-' #dna1.[](row)
           col -= 1; # row remains the same
         elsif col == 0          # can go only up
           # puts 'goin up!!!'
-          path << tv
-          aligned1 << '-' #dna2.[](col)
-          aligned2 << dna1.[](row)
+          g_path << tv
+          g_aligned1 << '-' #dna2.[](col)
+          g_aligned2 << dna1.[](row)
           row -= 1; # col remains the same
         else
           if dv == [lv,tv,dv].max
             # puts 'goin diag from row:' + row.to_s + ', col:' + col.to_s
-            path << dv
-            aligned1 << dna2.[](col)
-            aligned2 << dna1.[](row)
+            g_path << dv
+            g_aligned1 << dna2.[](col)
+            g_aligned2 << dna1.[](row)
             row -= 1; col -= 1
           elsif tv == [lv,tv,dv].max
             # puts 'goin up from row:' + row.to_s + ', col:' + col.to_s
-            path << tv
-            aligned1 << '-' #dna2.[](col)
-            aligned2 << dna1.[](row)
+            g_path << tv
+            g_aligned1 << '-' #dna2.[](col)
+            g_aligned2 << dna1.[](row)
             row -= 1; # col remains the same
           elsif lv == [lv,tv,dv].max
             # puts 'goin left from row:' + row.to_s + ', col:' + col.to_s 
-            path << lv
-            aligned1 << dna2.[](col)
-            aligned2 << '-' #dna1.[](row)
+            g_path << lv
+            g_aligned1 << dna2.[](col)
+            g_aligned2 << '-' #dna1.[](row)
             col -= 1; # row remains the same
         end 
       end
     end
 
-# c) finish
+# finish
   puts
   puts 'Path (with upward preference):'
-  print path; puts
+  print g_path; puts
   puts
   puts 'DNA alignment:'
-  print aligned1.reverse; puts
-  print aligned2.reverse; puts
+  print g_aligned1; puts
+  print g_aligned2; puts
   puts
-  print 'Score: '; print score = path.inject(0, :+); puts
+  print 'Score: '; print score = g_path.inject(0, :+); puts
+
+############## END OF GLOBAL ALIGNMENT #############################
+
+########### Smith-Waterman // local alignment
+# 1) set negative values to zeros
+  for r in 0..mat.row_count-1
+    for c in 0..mat.column_count-1
+      if (mat.[](r,c)) < 0.to_i
+        mat.send(:[]=,r,c,0)
+      end
+    end
+  end
+# 2) find the maximum of the matrix
+  max = mat.max
+  max_index = [] #array for row, col index of max
+
+  for r in 0..mat.row_count-1
+    for c in 0..mat.column_count-1
+      if mat.[](r,c) == max
+        max_index[0] = r
+        max_index[1] = c
+        breakthru = true
+      end
+      break if breakthru == true
+    end
+    break if breakthru == true
+  end
+
+# 3) We've got the init address, now go back until we reach 0 value
+  l_path = []
+  l_aligned1 = []
+  l_aligned2 = []
+  row = max_index[0]
+  col = max_index[1]
+
+    while row>0 or col>0
+
+      if mat.[](row,col) == 0
+        break
+      end
+
+        lv = mat.[](row,col-1) # left value
+        tv = mat.[](row-1,col) # top value
+        dv = mat.[](row-1,col-1) # diagonal value
+
+        if row == 0             # can go only to the left
+          # puts 'goin left!!'
+          l_path << lv
+          l_aligned1 << dna2.[](col)
+          l_aligned2 << '-' #dna1.[](row)
+          col -= 1; # row remains the same
+        elsif col == 0          # can go only up
+          # puts 'goin up!!!'
+          l_path << tv
+          l_aligned1 << '-' #dna2.[](col)
+          l_aligned2 << dna1.[](row)
+          row -= 1; # col remains the same
+        else
+          if dv == [lv,tv,dv].max
+            # puts 'goin diag from row:' + row.to_s + ', col:' + col.to_s
+            l_path << dv
+            l_aligned1 << dna2.[](col)
+            l_aligned2 << dna1.[](row)
+            row -= 1; col -= 1
+          elsif tv == [lv,tv,dv].max
+            # puts 'goin up from row:' + row.to_s + ', col:' + col.to_s
+            l_path << tv
+            l_aligned1 << '-' #dna2.[](col)
+            l_aligned2 << dna1.[](row)
+            row -= 1; # col remains the same
+          elsif lv == [lv,tv,dv].max
+            # puts 'goin left from row:' + row.to_s + ', col:' + col.to_s 
+            l_path << lv
+            l_aligned1 << dna2.[](col)
+            l_aligned2 << '-' #dna1.[](row)
+            col -= 1; # row remains the same
+        end 
+      end
+    end
+
+
+  pretty_matrix(dna1,dna2,mat)
+  puts
+  puts 'Path (with upward preference):'
+  print l_path; puts
+  puts
+  puts 'DNA alignment:'
+  print l_aligned1; puts
+  print l_aligned2; puts
+  puts
+  print 'Score: '; print score = l_path.inject(0, :+); puts
+
+######## END OF LOCAL ALIGNMENT ##########################################
