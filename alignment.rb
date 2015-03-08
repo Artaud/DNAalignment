@@ -1,6 +1,4 @@
-#
 # => DNA SEQUENCE ALIGNMENT
-#
 #
 # length of the first sequence, dna1, sets the number of rows
 # length of the second sequence, dna2, sets the number of columns
@@ -18,9 +16,6 @@
 # A|0000000
 # G|0000000
 #
-#
-#
-
 
 # libraries
     # require 'nmatrix' # using SciRuby NMatrix (gem install nmatrix)
@@ -61,20 +56,16 @@
     end
     
 # Needleman-Wunsch algorithm
-
   # 1) Take the sequences, add gap to the beginning (- is gap)
     dna1.insert(0, '-')
     dna2.insert(0, '-')
   # 2) Construct the empty matrix (using Matrix class)
-
     mat = Matrix.build(dna1.length, dna2.length) {|row, col| 0 }
 
   # 3) Fill in the first col and row
-
     for n in 0..dna2.length-1 # columns
       mat.send(:[]=,0,n,n*gap_coeff)
     end
-
     for n in 0..dna1.length-1 # rows
       mat.send(:[]=,n,0,n*gap_coeff)
     end
@@ -83,10 +74,6 @@
   # for each cell, look at top, left and top-left cell
     for row in 1..mat.row_count-1
       for col in 1..mat.column_count-1
-
-  # jedeme po radcich
-      actual_cell_val = mat.[](row,col)
-
   # a) top cell value, add gap_coeff to it
       topval = mat.[](row-1,col)
       topval = topval + gap_coeff 
@@ -108,18 +95,15 @@
         leftval = leftval + mismatch_coeff
         diagval = diagval + mismatch_coeff
       end
-
   # e) select the highest score and write it
         maxval = [topval,leftval,diagval].max
         mat.send(:[]=,row,col,maxval)
       end
     end
 
-
   # f) THIS WHOLE SHIT ONLY SHOWS PRETTY MATRIX ------------------
     puts 'The score matrix:'
     # puts mat.to_a.map(&:inspect) # shows the score matrix
-
     dna2.each_char {|d| print '    ' + d + ''}
     puts
 
@@ -152,10 +136,7 @@
       end
     end
   # ----------------------------------------------------------------  
-
-
 # 5) find the optimal path
-# 
 # a) init + start in the lower right corner
     path = []
     aligned1 = []
@@ -165,10 +146,7 @@
     path << mat.[](row,col)
 
 # b) iterate over the path until top-left
-
     while row>0 or col>0
-
-
         lv = mat.[](row,col-1) # left value
         tv = mat.[](row-1,col) # top value
         dv = mat.[](row-1,col-1) # diagonal value
@@ -207,8 +185,6 @@
         end 
       end
     end
-
-
 
 # c) finish
   puts
