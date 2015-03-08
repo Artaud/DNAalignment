@@ -1,23 +1,27 @@
-# DNAalignment.rb
-# DISCLAIMER: this program was created as a school assignment at FEE CTU Prague,
-#             within the Bioinformatics course
-# AUTHOR:     Jiří Richter
-#
+DISCLAIMER: this program was created as a school assignment at FEE CTU Prague, within the Bioinformatics course
+
+AUTHOR:     Jiří Richter
+
   This Ruby script enables You to globally and locally align 2 sequences of DNA.
+  
   Global alignment uses the Needleman-Wunsch algorithm.
+  
   Local alignment uses the Smith-Waterman algorithm.
   
   Input: 
+  
     - match, mismatch and gap coefficients
     - two DNA sequences (GATCgatc only)
+    
   Output:  
+  
     - matrix with filled scoring values
     - path array
     - alignment of the two sequences as arrays
 
 
-##  Sample output
-
+Sample output
+```
 Input the MATCH scoring coefficient>
 3
 Input the MISMATCH scoring coefficient>
@@ -65,3 +69,4 @@ Path (with upward preference):
 DNA alignment:
 ["A", "T", "A"]
 ["A", "C", "A"]
+```
