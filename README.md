@@ -3,9 +3,7 @@ DISCLAIMER: this program was created as a school assignment at FEE CTU Prague, w
 AUTHOR:     Jiří Richter
 
   This Ruby script enables You to globally and locally align 2 sequences of DNA.
-  
   Global alignment uses the Needleman-Wunsch algorithm.
-  
   Local alignment uses the Smith-Waterman algorithm.
   
   Input: 
